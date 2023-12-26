@@ -1,7 +1,19 @@
 <template>
   <div>
     <div v-for="(subnet, index) in subnets" :key="index" class="d-flex ma-15">
-      <v-card :loading="subnet.loading" :title="'Subnet ' + (index + 1)" class="mx-auto card-width">
+      <!-- <v-expand-transition> -->
+        <v-card
+          v-show="!collapsedCards[index]"
+          :loading="subnet.loading"
+          class="mx-auto card-width"
+        >
+          <v-toolbar>
+            <v-toolbar-title>{{ 'Subnet ' + (index + 1) }}</v-toolbar-title>
+            <v-spacer></v-spacer>
+            <v-btn icon @click="toggleCard(index)" class="collapse-button">
+              <v-icon>{{ collapsedCards[index] ? 'mdi-chevron-down' : 'mdi-chevron-up' }}</v-icon>
+            </v-btn>
+          </v-toolbar>
        <div class="d-flex w-100 close-button justify-end">
         <v-btn icon @click="removeSubnetForm(index)" class="close-button">
           <v-icon>mdi-close</v-icon>
@@ -12,16 +24,16 @@
             <v-text-field 
               v-model="subnet.name" 
               :readonly="subnet.loading" 
-              :rules="[required]" 
+              :rules="[required, subnetNamePattern]" 
               class="mb-2 ml-5 mr-5 field-width" 
               variant="outlined"
               density="compact"
               label="Name *">
             </v-text-field>
             <v-text-field 
-              v-model="subnet.subnetAddress" 
+              v-model="subnet.cidr" 
               :readonly="subnet.loading" 
-              :rules="[required]" 
+              :rules="[required, subnetAddressPattern]" 
               class="mb-2 ml-5 mr-5 field-width" 
               variant="outlined"
               density="compact"
@@ -29,8 +41,8 @@
             </v-text-field>
           </div>
           <div class="d-flex">
-            <v-select
-              v-model="subnet.selectedEndpoints"
+            <v-autocomplete
+              v-model="subnet.serviceEndpoints"
               :items="allEndpoints"
               label="Select Service Endpoints"
               multiple
@@ -38,21 +50,21 @@
               variant="outlined"
               density="compact"
               persistent-hint
-            ></v-select>
-            <v-select
-              v-model="subnet.selectedSubnetDelegation"
+            >
+            </v-autocomplete>
+            <v-autocomplete
+              v-model="subnet.delegation"
               :items="allSubnetDelegation"
               label="Select Subnet Delegation"
-              multiple
               class="mb-2 ml-5 mr-5 field-width" 
               variant="outlined"
               density="compact"
               persistent-hint
-            ></v-select>
+            ></v-autocomplete>
           </div>
           <div class="d-flex">
             <v-text-field 
-              v-model="subnet.costCenter" 
+              v-model="subnet.costcenter" 
               :readonly="subnet.loading" 
               :rules="[required]" 
               class="mb-2 ml-5 mr-5 field-width" 
@@ -63,7 +75,7 @@
             <v-text-field 
               v-model="subnet.contact" 
               :readonly="subnet.loading" 
-              :rules="[required]" 
+              :rules="[required, emailPattern]" 
               class="mb-2 ml-5 mr-5 field-width" 
               variant="outlined"
               density="compact"
@@ -72,9 +84,9 @@
           </div>
           <div>
             <v-text-field 
-              v-model="subnet.techContact" 
+              v-model="subnet.techcontact" 
               :readonly="subnet.loading" 
-              :rules="[required]" 
+              :rules="[required, emailPattern]" 
               class="mb-2 ml-5 mr-5 field-width" 
               variant="outlined"
               density="compact"
@@ -82,11 +94,23 @@
             </v-text-field>
           </div>
           <div class="ml-5 mr-5 mb-2">
-            <v-btn class="mb-4" v-if="subnets.length" color="primary" @click="subnet.addNgs = !subnet.addNgs">Add NGS Rule</v-btn>
-            <NsgTable v-if="subnets.length && subnet.addNgs" />
+            <v-btn class="mb-4" v-if="subnets.length" color="primary" @click="subnet.nsgRules = !subnet.nsgRules">Add NGS Rule</v-btn>
+            <NsgTable v-if="subnets.length && subnet.nsgRules" :tableData="subnet.nsgRules" />
           </div>
         </v-form>
       </v-card>
+      <!-- </v-expand-transition> -->
+      <div v-if="collapsedCards[index]" class="collapsed-title">
+        <div class="title-text" v-show="collapsedCards[index]" @click="toggleCard(index)">
+          {{ 'Subnet ' + (index + 1) }}
+        </div>
+        <div>
+          <v-btn icon @click="toggleCard(index)" class="collapse-button">
+            <v-icon>{{ collapsedCards[index] ? 'mdi-chevron-down' : 'mdi-chevron-up' }}</v-icon>
+          </v-btn>
+        </div>
+      </div>
+      
     </div>
     <div class="ml-15 mr-15">
       <v-btn color="primary" size="large" class="w-100" :class="subnets.length ? ' mt-0 mb-5' : 'mt-10'"  variant="elevated" @click="addSubnetForm">+ Add subnet</v-btn>
@@ -108,13 +132,27 @@
 </template>
 
 <script>
+import { serviceEndpoints, subnetDelegations } from '@/assets/utils'
+import sourceState from '@/assets/source_state'
+
 export default {
   data: () => ({
     subnets: [],
     loading: false,
-    allEndpoints: ['Alabama', 'Alaska', 'American Samoa', 'Arizona'],
-    allSubnetDelegation: ['Alabama', 'Alaska', 'American Samoa', 'Arizona']
+    allEndpoints: serviceEndpoints,
+    allSubnetDelegation: subnetDelegations,
+    collapsedCards: [],
   }),
+
+  mounted() {
+      let data = true
+      if(data) {
+        this.subnets = sourceState.virtualNetwork[0].subnets
+      }
+      else {
+        this.addSubnetForm()
+      }
+    },
 
   methods: {
     addSubnetForm() {
@@ -122,13 +160,13 @@ export default {
         form: false,
         loading: false,
         name: null,
-        subnetAddress: null,
-        costCenter: null,
+        cidr: null,
+        costcenter: null,
         contact: null,
-        techContact: null,
-        addNgs: false,
-        selectedEndpoints: [],
-        selectedSubnetDelegation: [],
+        techcontact: null,
+        nsgRules: false,
+        serviceEndpoints: [],
+        delegation: [],
       });
     },
 
@@ -158,11 +196,35 @@ export default {
     required(v) {
       return !!v || 'Field is required';
     },
+
+    subnetNamePattern(v) {
+      const pattern = /^[A-Za-z]+Subnet$/;
+      return pattern.test(v) || "Please enter only letters (upper or lowercase) ending with the word 'Subnet'";
+    },
+
+    subnetAddressPattern(v) {
+      const pattern = /\b(?:\d{1,3}\.){3}\d{1,3}\/(3[0-2]|[12]?[0-9])\b/;
+      return pattern.test(v) || "Please enter a valid IPv4 address in CIDR notation";
+    },
+
+    costCenterPattern(v) {
+      const pattern = /^[A-Z]{3}-[A-Z]{2}-\d{3}$/;
+      return pattern.test(v) || "Please enter a valid IPv4 address in CIDR notation";
+    },
+
+    emailPattern(v) {
+      const pattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      return pattern.test(v) || 'Invalid email address.';
+    },
+
+    toggleCard(index) {
+      this.collapsedCards[index] = !this.collapsedCards[index];
+    },
   },
 
   computed: {
     updateNgsButton() {
-      this.subnets.addNgs = !this.subnets.addNgs
+      this.subnets.nsgRules = !this.subnets.nsgRules
     }
   }
 }
@@ -175,5 +237,22 @@ export default {
 
 .field-width{
   width: 47%;
+}
+
+.collapsed-title{
+  padding-left: 16px;
+  padding-right: 10px;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  border-radius: 5px;
+  background-color:rgb(238, 238, 238);
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+}
+
+.title-text{
+  margin-top: 7px;
+  font-size: large;
 }
 </style>

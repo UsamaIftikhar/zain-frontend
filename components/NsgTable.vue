@@ -1,7 +1,7 @@
 <template>
   <v-data-table
     :headers="headers"
-    :items="desserts"
+    :items="tableData"
   >
     <template v-slot:top>
       <v-toolbar
@@ -35,78 +35,111 @@
 
             <v-card-text>
               <v-container>
-                <v-row>
+                <!-- <v-row>
                   <v-col
                     cols="12"
                     sm="6"
                     md="4"
-                  >
+                  > -->
                     <v-text-field
                       v-model="editedItem.name"
                       label="Name"
+                      density="compact"
+                      variant="outlined"
                     ></v-text-field>
-                  </v-col>
+                  <!-- </v-col>
                   <v-col
                     cols="12"
                     sm="6"
                     md="4"
-                  >
+                  > -->
                     <v-text-field
-                      v-model="editedItem.source"
+                      v-model="editedItem.properties.sourceAddressPrefixes"
                       label="Source"
+                      density="compact"
+                      variant="outlined"
                     ></v-text-field>
-                  </v-col>
+                  <!-- </v-col>
                   <v-col
                     cols="12"
                     sm="6"
                     md="4"
-                  >
+                  > -->
                     <v-text-field
-                      v-model="editedItem.destination"
+                      v-model="editedItem.properties.destinationAddressPrefixes"
                       label="Destination"
+                      density="compact"
+                      variant="outlined"
                     ></v-text-field>
-                  </v-col>
+                  <!-- </v-col>
                   <v-col
                     cols="12"
                     sm="6"
                     md="4"
-                  >
+                  > -->
                     <v-text-field
-                      v-model="editedItem.port"
+                      v-model="editedItem.properties.destinationPortRanges"
+                      :rules="[numbersArrayOnly]"
                       label="Port"
+                      density="compact"
+                      variant="outlined"
                     ></v-text-field>
-                  </v-col>
+                  <!-- </v-col>
                   <v-col
                     cols="12"
                     sm="6"
                     md="4"
-                  >
-                    <v-text-field
-                      v-model="editedItem.protocol"
+                  > -->
+                    <v-select
+                      v-model="editedItem.properties.protocol"
+                      :items="['Any', 'TCP', 'UDP', 'ICMP']"
                       label="Protocol"
-                    ></v-text-field>
-                  </v-col>
+                      density="compact"
+                      variant="outlined"
+                    ></v-select>
+                  <!-- </v-col>
                   <v-col
                     cols="12"
                     sm="6"
                     md="4"
-                  >
+                  > -->
                     <v-text-field
-                      v-model="editedItem.position"
+                      v-model="editedItem.properties.priority"
+                      :rules="[numbersOnly]"
                       label="position"
+                      density="compact"
+                      variant="outlined"
                     ></v-text-field>
-                  </v-col>
+                  <!-- </v-col>
                   <v-col
                     cols="12"
                     sm="6"
                     md="4"
-                  >
-                    <v-text-field
-                      v-model="editedItem.action"
+                  > -->
+                    <v-select
+                      v-model="editedItem.properties.access"
+                      :items="['Allow', 'Deny']"
                       label="Action"
+                      density="compact"
+                      variant="outlined"
+                    ></v-select>
+
+                    <v-select
+                      v-model="editedItem.properties.direction"
+                      :items="['Inbound', 'Outbound']"
+                      label="Direction"
+                      density="compact"
+                      variant="outlined"
+                    ></v-select>
+
+                    <v-text-field
+                      v-model="editedItem.properties.description"
+                      label="Description"
+                      density="compact"
+                      variant="outlined"
                     ></v-text-field>
-                  </v-col>
-                </v-row>
+                  <!-- </v-col>
+                </v-row> -->
               </v-container>
             </v-card-text>
 
@@ -142,6 +175,44 @@
         </v-dialog>
       </v-toolbar>
     </template>
+    <template v-slot:item="{ item, isExpanded }">
+      <template v-if="showRows">
+        <tr>
+          <td>{{ item.name }}</td>
+          <td>{{ item.properties.sourceAddressPrefixes }}</td>
+          <td>{{ item.properties.destinationAddressPrefixes }}</td>
+          <td>{{ item.properties.destinationPortRanges }}</td>
+          <td>{{ item.properties.protocol }}</td>
+          <td>{{ item.properties.priority }}</td>
+          <td>{{ item.properties.access }}</td>
+          <td>{{ item.properties.direction }}</td>
+          <td>{{ item.description }}</td>
+          <td>
+            <v-icon
+              size="small"
+              class="me-2"
+              @click="editItem(item)"
+            >
+              mdi-pencil
+            </v-icon>
+            <v-icon
+              size="small"
+              @click="deleteItem(item)"
+            >
+              mdi-delete
+            </v-icon>
+          </td>
+        </tr>
+      </template>
+    </template>
+    <template  v-slot:header.chevron="{ props }">
+      <span class="pointer" v-if="showRows" @click="showRows=!showRows" v-bind="props">
+        <v-icon>mdi-chevron-up</v-icon>
+      </span>
+      <span class="pointer" v-else @click="showRows=!showRows" v-bind="props">
+        <v-icon>mdi-chevron-down</v-icon>
+      </span>
+    </template>
     <template v-slot:item.editRemove="{ item }">
       <v-icon
         size="small"
@@ -170,9 +241,11 @@
 
 <script>
   export default {
+    props: ['tableData'],
     data: () => ({
       dialog: false,
       dialogDelete: false,
+      showRows: true,
       headers: [
         {
           title: 'Name',
@@ -180,31 +253,47 @@
           sortable: false,
           key: 'name',
         },
-        { title: 'Source', key: 'source' },
-        { title: 'Destination', key: 'destination' },
-        { title: 'Port', key: 'port' },
+        { title: 'Source', key: 'sourceAddressPrefixes' },
+        { title: 'Destination', key: 'destinationAddressPrefixes' },
+        { title: 'Port', key: 'destinationPortRanges' },
         { title: 'Protocol', key: 'protocol' },
-        { title: 'Position', key: 'position' },
-        { title: 'Action', key: 'action', sortable: false },
+        { title: 'Position', key: 'priority' },
+        { title: 'Action', key: 'access', sortable: false },
+        { title: 'Direction', key: 'direction', sortable: false },
+        { title: 'Description', key: 'description', sortable: false },
         { title: 'Edit/Remove', key: 'editRemove', sortable: false },
+        {
+          text: 'Chevron',
+          value: 'chevron', // You can use a unique key
+          sortable: false,
+          align: 'end', // Align at the end of the column
+        },
       ],
-      desserts: [],
+      tableData: [],
       editedIndex: -1,
       editedItem: {
         name: '',
-        source: 0,
-        destination: 0,
-        port: 0,
-        position: 0,
-        action: 0,
+        properties: {
+          sourceAddressPrefixes: '',
+          destinationAddressPrefixes: 0,
+          destinationPortRanges: 0,
+          priority: 0,
+          access: 'Allow',
+          direction: 'Inbound',
+          description: '',
+        }
       },
       defaultItem: {
         name: '',
-        source: 0,
-        destination: 0,
-        port: 0,
-        position: 0,
-        action: 0,
+        properties: {
+          sourceAddressPrefixes: 0,
+          destinationAddressPrefixes: 0,
+          destinationPortRanges: 0,
+          priority: 0,
+          access: 'Allow',
+          direction: 'Inbound',
+          description: '',
+        }
       },
     }),
 
@@ -224,37 +313,34 @@
     },
 
     created () {
-      this.initialize()
+
     },
 
     methods: {
-      initialize () {
-        this.desserts = [
-          {
-            name: '1',
-            source: 0,
-            destination: 0,
-            port: 0,
-            position: 0,
-            action: 0,
-          },
-        ]
+      
+      numbersOnly(v) {
+        return /^[0-9]+$/.test(v) || 'Field must be a number'
+      },
+
+      numbersArrayOnly(v) {
+        const numbers = v.split(',').map(num => num.trim());
+        return numbers.every(num => /^[0-9]+$/.test(num)) || 'Field must be a number or array of numbers';
       },
 
       editItem (item) {
-        this.editedIndex = this.desserts.indexOf(item)
+        this.editedIndex = this.tableData.indexOf(item)
         this.editedItem = Object.assign({}, item)
         this.dialog = true
       },
 
       deleteItem (item) {
-        this.editedIndex = this.desserts.indexOf(item)
+        this.editedIndex = this.tableData.indexOf(item)
         this.editedItem = Object.assign({}, item)
         this.dialogDelete = true
       },
 
       deleteItemConfirm () {
-        this.desserts.splice(this.editedIndex, 1)
+        this.tableData.splice(this.editedIndex, 1)
         this.closeDelete()
       },
 
@@ -276,9 +362,9 @@
 
       save () {
         if (this.editedIndex > -1) {
-          Object.assign(this.desserts[this.editedIndex], this.editedItem)
+          Object.assign(this.tableData[this.editedIndex], this.editedItem)
         } else {
-          this.desserts.push(this.editedItem)
+          this.tableData.push(this.editedItem)
         }
         this.close()
       },

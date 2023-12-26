@@ -1,0 +1,488 @@
+{
+  "virtualNetwork": [
+    {
+      "name": "vnet-lpa-dev-westeurope",
+      "subnets": [
+        {
+          "name": "PrivateEndpointSubnet",
+          "cidr": "10.102.64.0/23",
+          "contact": "christoph.zimmermann@l-p-a.com",
+          "techcontact": "muhammad.arshad@l-p-a.com",
+          "costcenter": "TES-TA-001",
+          "serviceEndpoints": [
+            "Microsoft.KeyVault"
+          ],
+          "delegation": "None",
+          "nsgRules": [
+            {
+              "name": "in-allow-azure-sql",
+              "properties": {
+                "protocol": "TCP",
+                "destinationPortRanges": [
+                  "1433"
+                ],
+                "sourceAddressPrefixes": [
+                  "10.102.68.0/24"
+                ],
+                "destinationAddressPrefixes": [
+                  "10.102.64.14"
+                ],
+                "access": "Allow",
+                "priority": 101,
+                "direction": "Inbound"
+              },
+              "description": "Allow access to SQL Server"
+            },
+            {
+              "name": "in-allow-keyvault-access",
+              "properties": {
+                "protocol": "TCP",
+                "destinationPortRanges": [
+                  "443"
+                ],
+                "sourceAddressPrefixes": [
+                  "10.102.68.0/24"
+                ],
+                "destinationAddressPrefixes": [
+                  "10.102.64.15"
+                ],
+                "access": "Allow",
+                "priority": 200,
+                "direction": "Inbound"
+              },
+              "description": "Allow access to KeyVault"
+            },
+            {
+              "name": "in-allow-blob-sastrgaccamdeveuw",
+              "properties": {
+                "protocol": "TCP",
+                "destinationPortRanges": [
+                  "443"
+                ],
+                "sourceAddressPrefixes": [
+                  "10.102.68.0/24"
+                ],
+                "destinationAddressPrefixes": [
+                  "10.102.64.11"
+                ],
+                "access": "Allow",
+                "priority": 300,
+                "direction": "Inbound"
+              },
+              "description": "Allow access to Storage Account"
+            },
+            {
+              "name": "in-allow-file-sastrgaccamdeveuw",
+              "properties": {
+                "protocol": "TCP",
+                "destinationPortRanges": [
+                  "445"
+                ],
+                "sourceAddressPrefixes": [
+                  "10.102.68.0/24"
+                ],
+                "destinationAddressPrefixes": [
+                  "10.102.64.12"
+                ],
+                "access": "Allow",
+                "priority": 301,
+                "direction": "Inbound"
+              },
+              "description": "Allow access to Storage Account"
+            },
+            {
+              "name": "in-deny-default",
+              "properties": {
+                "protocol": "*",
+                "destinationPortRanges": [
+                  "*"
+                ],
+                "sourceAddressPrefixes": [
+                  "*"
+                ],
+                "destinationAddressPrefixes": [
+                  "*"
+                ],
+                "access": "Deny",
+                "priority": 4096,
+                "direction": "Inbound"
+              },
+              "description": "Default deny rule, blocks all inbound traffic"
+            },
+            {
+              "name": "out-deny-default",
+              "properties": {
+                "protocol": "*",
+                "destinationPortRanges": [
+                  "*"
+                ],
+                "sourceAddressPrefixes": [
+                  "*"
+                ],
+                "destinationAddressPrefixes": [
+                  "*"
+                ],
+                "access": "Deny",
+                "priority": 4096,
+                "direction": "Outbound"
+              },
+              "description": "Default deny rule, blocks all outbound traffic"
+            }
+          ]
+        },
+        {
+          "name": "VirtualMachineSubnet",
+          "cidr": "10.102.66.0/23",
+          "contact": "christoph.zimmermann@l-p-a.com",
+          "techcontact": "muhammad.arshad@l-p-a.com",
+          "costcenter": "TES-TA-001",
+          "serviceEndpoints": [
+            "Microsoft.KeyVault"
+          ],
+          "delegation": "None",
+          "nsgRules": [
+            {
+              "name": "in-allow-novum-to-subnet",
+              "properties": {
+                "protocol": "*",
+                "destinationPortRanges": [
+                  "*"
+                ],
+                "sourceAddressPrefixes": [
+                  "213.61.236.98"
+                ],
+                "destinationAddressPrefixes": [
+                  "*"
+                ],
+                "access": "Allow",
+                "priority": 101,
+                "direction": "Inbound"
+              },
+              "description": "Allow access to VM's via Novum"
+            },
+            {
+              "name": "in-deny-default",
+              "properties": {
+                "protocol": "*",
+                "destinationPortRanges": [
+                  "*"
+                ],
+                "sourceAddressPrefixes": [
+                  "*"
+                ],
+                "destinationAddressPrefixes": [
+                  "*"
+                ],
+                "access": "Deny",
+                "priority": 4096,
+                "direction": "Inbound"
+              },
+              "description": "Default deny rule, blocks all inbound traffic"
+            },
+            {
+              "name": "out-allow-vm-to-internet-http-https",
+              "properties": {
+                "protocol": "TCP",
+                "destinationPortRanges": [
+                  "443",
+                  "80"
+                ],
+                "sourceAddressPrefixes": [
+                  "10.102.64.0/23"
+                ],
+                "destinationAddressPrefixes": [
+                  "Internet"
+                ],
+                "access": "Allow",
+                "priority": 302,
+                "direction": "Outbound"
+              },
+              "description": "Allow access to internet - still restricted by azure firewall"
+            },
+            {
+              "name": "out-deny-default",
+              "properties": {
+                "protocol": "*",
+                "destinationPortRanges": [
+                  "*"
+                ],
+                "sourceAddressPrefixes": [
+                  "*"
+                ],
+                "destinationAddressPrefixes": [
+                  "*"
+                ],
+                "access": "Deny",
+                "priority": 4096,
+                "direction": "Outbound"
+              },
+              "description": "Default deny rule, blocks all outbound traffic"
+            }
+          ]
+        },
+        {
+          "name": "AMKubernetesSubnet",
+          "cidr": "10.102.68.0/24",
+          "contact": "christoph.zimmermann@l-p-a.com",
+          "techcontact": "muhammad.arshad@l-p-a.com",
+          "costcenter": "TES-TA-001",
+          "serviceEndpoints": [
+            "Microsoft.KeyVault"
+          ],
+          "delegation": "None",
+          "nsgRules": [
+            {
+              "name": "in-allow-azureloadbalancer-to-subnet",
+              "properties": {
+                "protocol": "*",
+                "destinationPortRanges": [
+                  "*"
+                ],
+                "sourceAddressPrefixes": [
+                  "AzureLoadBalancer"
+                ],
+                "destinationAddressPrefixes": [
+                  "10.102.68.0/24"
+                ],
+                "access": "Allow",
+                "priority": 100,
+                "direction": "Inbound"
+              },
+              "description": ""
+            },
+            {
+              "name": "in-allow-waf-to-subnet",
+              "properties": {
+                "protocol": "*",
+                "destinationPortRanges": [
+                  "443"
+                ],
+                "sourceAddressPrefixes": [
+                  "10.100.1.0/24"
+                ],
+                "destinationAddressPrefixes": [
+                  "10.102.68.0/24"
+                ],
+                "access": "Allow",
+                "priority": 101,
+                "direction": "Inbound"
+              },
+              "description": ""
+            },
+            {
+              "name": "in-allow-novum-to-subnet",
+              "properties": {
+                "protocol": "*",
+                "destinationPortRanges": [
+                  "*"
+                ],
+                "sourceAddressPrefixes": [
+                  "213.61.236.98"
+                ],
+                "destinationAddressPrefixes": [
+                  "*"
+                ],
+                "access": "Allow",
+                "priority": 102,
+                "direction": "Inbound"
+              },
+              "description": "Allow access via Novum"
+            },
+            {
+              "name": "in-allow-subnet-internal",
+              "properties": {
+                "protocol": "*",
+                "destinationPortRanges": [
+                  "*"
+                ],
+                "sourceAddressPrefixes": [
+                  "10.102.68.0/24"
+                ],
+                "destinationAddressPrefixes": [
+                  "10.102.68.0/24"
+                ],
+                "access": "Allow",
+                "priority": 110,
+                "direction": "Inbound"
+              },
+              "description": "Allow subnet internal traffic"
+            },
+            {
+              "name": "in-deny-default",
+              "properties": {
+                "protocol": "*",
+                "destinationPortRanges": [
+                  "*"
+                ],
+                "sourceAddressPrefixes": [
+                  "*"
+                ],
+                "destinationAddressPrefixes": [
+                  "*"
+                ],
+                "access": "Deny",
+                "priority": 4096,
+                "direction": "Inbound"
+              },
+              "description": "Default deny rule, blocks all inbound traffic"
+            },
+            {
+              "name": "out-allow-aks-to-internet-http-https",
+              "properties": {
+                "protocol": "TCP",
+                "destinationPortRanges": [
+                  "80",
+                  "443"
+                ],
+                "sourceAddressPrefixes": [
+                  "10.102.68.0/24"
+                ],
+                "destinationAddressPrefixes": [
+                  "Internet"
+                ],
+                "access": "Allow",
+                "priority": 100,
+                "direction": "Outbound"
+              },
+              "description": "allow AKS to Internet https - further restricted on azure firewall"
+            },
+            {
+              "name": "out-allow-subnet-internal",
+              "properties": {
+                "protocol": "*",
+                "destinationPortRanges": [
+                  "*"
+                ],
+                "sourceAddressPrefixes": [
+                  "10.102.68.0/24"
+                ],
+                "destinationAddressPrefixes": [
+                  "10.102.68.0/24"
+                ],
+                "access": "Allow",
+                "priority": 110,
+                "direction": "Outbound"
+              },
+              "description": "Allow subnet internal traffic"
+            },
+            {
+              "name": "out-allow-aks-to-keyvault",
+              "properties": {
+                "protocol": "TCP",
+                "destinationPortRanges": [
+                  "443"
+                ],
+                "sourceAddressPrefixes": [
+                  "10.102.68.0/24"
+                ],
+                "destinationAddressPrefixes": [
+                  "10.102.64.15"
+                ],
+                "access": "Allow",
+                "priority": 201,
+                "direction": "Outbound"
+              },
+              "description": "allow AKS to KeyVault https"
+            },
+            {
+              "name": "out-allow-aks-to-fileshare",
+              "properties": {
+                "protocol": "TCP",
+                "destinationPortRanges": [
+                  "445"
+                ],
+                "sourceAddressPrefixes": [
+                  "10.102.68.0/24"
+                ],
+                "destinationAddressPrefixes": [
+                  "10.102.64.12"
+                ],
+                "access": "Allow",
+                "priority": 202,
+                "direction": "Outbound"
+              },
+              "description": "allow AKS to fileshare smb"
+            },
+            {
+              "name": "out-allow-aks-to-blobStore",
+              "properties": {
+                "protocol": "TCP",
+                "destinationPortRanges": [
+                  "443"
+                ],
+                "sourceAddressPrefixes": [
+                  "10.102.68.0/24"
+                ],
+                "destinationAddressPrefixes": [
+                  "10.102.64.11"
+                ],
+                "access": "Allow",
+                "priority": 203,
+                "direction": "Outbound"
+              },
+              "description": "allow AKS to blob store"
+            },
+            {
+              "name": "out-allow-aks-to-containerregistry",
+              "properties": {
+                "protocol": "TCP",
+                "destinationPortRanges": [
+                  "443"
+                ],
+                "sourceAddressPrefixes": [
+                  "10.102.68.0/24"
+                ],
+                "destinationAddressPrefixes": [
+                  "10.100.4.34",
+                  "10.100.4.35"
+                ],
+                "access": "Allow",
+                "priority": 500,
+                "direction": "Outbound"
+              },
+              "description": "Allow access to container registry"
+            },
+            {
+              "name": "out-allow-azure-sql",
+              "properties": {
+                "protocol": "TCP",
+                "destinationPortRanges": [
+                  "1433"
+                ],
+                "sourceAddressPrefixes": [
+                  "10.102.68.0/24"
+                ],
+                "destinationAddressPrefixes": [
+                  "10.102.64.14"
+                ],
+                "access": "Allow",
+                "priority": 501,
+                "direction": "Outbound"
+              },
+              "description": "Allow access to SQL Server"
+            },
+            {
+              "name": "out-deny-default",
+              "properties": {
+                "protocol": "*",
+                "destinationPortRanges": [
+                  "*"
+                ],
+                "sourceAddressPrefixes": [
+                  "*"
+                ],
+                "destinationAddressPrefixes": [
+                  "*"
+                ],
+                "access": "Deny",
+                "priority": 4096,
+                "direction": "Outbound"
+              },
+              "description": "Default deny rule, blocks all outbound traffic"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
