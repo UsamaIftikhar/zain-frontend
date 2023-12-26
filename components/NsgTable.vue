@@ -133,7 +133,7 @@
                     ></v-select>
 
                     <v-text-field
-                      v-model="editedItem.properties.description"
+                      v-model="editedItem.description"
                       label="Description"
                       density="compact"
                       variant="outlined"
@@ -269,10 +269,10 @@
           align: 'end', // Align at the end of the column
         },
       ],
-      tableData: [],
       editedIndex: -1,
       editedItem: {
         name: '',
+        description: '',
         properties: {
           sourceAddressPrefixes: '',
           destinationAddressPrefixes: 0,
@@ -280,11 +280,11 @@
           priority: 0,
           access: 'Allow',
           direction: 'Inbound',
-          description: '',
         }
       },
       defaultItem: {
         name: '',
+        description: '',
         properties: {
           sourceAddressPrefixes: 0,
           destinationAddressPrefixes: 0,
@@ -292,7 +292,6 @@
           priority: 0,
           access: 'Allow',
           direction: 'Inbound',
-          description: '',
         }
       },
     }),

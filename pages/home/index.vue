@@ -94,7 +94,7 @@
             </v-text-field>
           </div>
           <div class="ml-5 mr-5 mb-2">
-            <v-btn class="mb-4" v-if="subnets.length" color="primary" @click="subnet.nsgRules = !subnet.nsgRules">Add NGS Rule</v-btn>
+            <v-btn class="mb-4" v-if="subnets.length" color="primary" @click="updateNgsButton(subnet)">Add NGS Rule</v-btn>
             <NsgTable v-if="subnets.length && subnet.nsgRules" :tableData="subnet.nsgRules" />
           </div>
         </v-form>
@@ -188,6 +188,18 @@ export default {
       }, 2000);
     },
 
+    submitAllForms() {
+      const updatedData = this.subnets.map(item => {
+        const { form, loading, ...rest } = item;
+        const filteredObject = Object.fromEntries(
+          Object.entries(rest).filter(([key, value]) => key !== "form" && key !== "loading")
+        );
+        return filteredObject;
+      });
+
+      // Log the updated data
+      console.log(updatedData);
+    },
     allFormsValid() {
       // Check if all forms are valid before enabling the submit button
       return this.subnets.every(subnet => subnet.form);
@@ -220,12 +232,17 @@ export default {
     toggleCard(index) {
       this.collapsedCards[index] = !this.collapsedCards[index];
     },
+
+    updateNgsButton(subnet) {
+      if(!subnet.nsgRules.length) {
+        subnet.nsgRules = []
+      }
+    },
   },
 
   computed: {
-    updateNgsButton() {
-      this.subnets.nsgRules = !this.subnets.nsgRules
-    }
+   
+
   }
 }
 </script>
