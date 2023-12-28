@@ -20,6 +20,9 @@ export default defineNuxtConfig({
       );
     }
   ],
+  plugins: [
+    "~/plugins/mitt.js",
+  ],
   components: {
     dirs: [
       "~/components"
