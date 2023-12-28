@@ -8,8 +8,11 @@
           class="mx-auto card-width"
         >
           <v-toolbar>
-            <v-toolbar-title>{{ 'Subnet ' + (index + 1) }}</v-toolbar-title>
+            <v-toolbar-title>{{ getSubnetName(subnet, index) }}</v-toolbar-title>
             <v-spacer></v-spacer>
+            <v-btn icon @click="removeSubnetForm(index)" class="collapse-button">
+              <v-icon>mdi-delete</v-icon>
+            </v-btn>
             <v-btn icon @click="toggleCard(index)" class="collapse-button">
               <v-icon>{{ collapsedCards[index] ? 'mdi-chevron-down' : 'mdi-chevron-up' }}</v-icon>
             </v-btn>
@@ -22,7 +25,8 @@
         <v-form v-model="subnet.form" @submit.prevent="() => onSubmit()">
           <div class="d-flex">
             <v-text-field 
-              v-model="subnet.name" 
+              v-model="subnet.name"
+              :disabled="subnet.previous"
               :readonly="subnet.loading" 
               :rules="[required, subnetNamePattern]" 
               class="mb-2 ml-5 mr-5 field-width" 
@@ -32,6 +36,7 @@
             </v-text-field>
             <v-text-field 
               v-model="subnet.cidr" 
+              :disabled="subnet.previous"
               :readonly="subnet.loading" 
               :rules="[required, subnetAddressPattern]" 
               class="mb-2 ml-5 mr-5 field-width" 
@@ -102,15 +107,17 @@
       <!-- </v-expand-transition> -->
       <div v-if="collapsedCards[index]" class="collapsed-title">
         <div class="title-text" v-show="collapsedCards[index]" @click="toggleCard(index)">
-          {{ 'Subnet ' + (index + 1) }}
+          {{ getSubnetName(subnet, index) }}
         </div>
         <div>
+          <v-btn icon @click="removeSubnetForm(index)" class="collapse-button mr-3">
+            <v-icon>mdi-delete</v-icon>
+          </v-btn>
           <v-btn icon @click="toggleCard(index)" class="collapse-button">
             <v-icon>{{ collapsedCards[index] ? 'mdi-chevron-down' : 'mdi-chevron-up' }}</v-icon>
           </v-btn>
         </div>
       </div>
-      
     </div>
     <div class="ml-15 mr-15">
       <v-btn color="primary" size="large" class="w-100" :class="subnets.length ? ' mt-0 mb-5' : 'mt-10'"  variant="elevated" @click="addSubnetForm">+ Add subnet</v-btn>
@@ -142,17 +149,25 @@ export default {
     allEndpoints: serviceEndpoints,
     allSubnetDelegation: subnetDelegations,
     collapsedCards: [],
+    snackbar: null,
   }),
 
   mounted() {
-      let data = true
-      if(data) {
-        this.subnets = sourceState.virtualNetwork[0].subnets
-      }
-      else {
-        this.addSubnetForm()
-      }
-    },
+    const { $bus } = useNuxtApp()
+    this.snackbar = $bus
+
+    let data = true
+    if(data) {
+      this.subnets = sourceState.virtualNetwork[0].subnets
+      this.subnets.map((subnet, index) => {
+        subnet.previous = true
+        this.collapsedCards[index] = !this.collapsedCards[index]
+      })
+    }
+    else {
+      this.addSubnetForm()
+    }
+  },
 
   methods: {
     addSubnetForm() {
@@ -192,11 +207,14 @@ export default {
       const updatedData = this.subnets.map(item => {
         const { form, loading, ...rest } = item;
         const filteredObject = Object.fromEntries(
-          Object.entries(rest).filter(([key, value]) => key !== "form" && key !== "loading")
+          Object.entries(rest).filter(([key, value]) => key !== "form" && key !== "loading" && key !== "previous")
         );
         return filteredObject;
       });
-
+      let hasDuplicate = this.hasDuplicates(updatedData)
+      console.log('hasDuplicate', hasDuplicate)
+      if(hasDuplicate) {
+      }
       // Log the updated data
       console.log(updatedData);
     },
@@ -238,6 +256,39 @@ export default {
         subnet.nsgRules = []
       }
     },
+
+    getSubnetName(subnet, index) {
+      if(subnet.name && subnet.name.includes('Subnet')) {
+        return subnet.name
+      }
+      else return 'Subnet ' + (index + 1)
+    },
+
+    hasDuplicates(data) {
+      const nameSet = new Set();
+      const cidrSet = new Set();
+
+      for (const entry of data) {
+        // Check for duplicate 'name'
+        if (nameSet.has(entry.name)) {
+          console.error(`Duplicate 'name' found: ${entry.name}`);
+          this.snackbar.emit('toast', { text: 'Subnet name conflicts with existing or newly added subnet names.', type: 'error' })
+          return true;
+        }
+        nameSet.add(entry.name);
+
+        // Check for duplicate 'cidr'
+        if (cidrSet.has(entry.cidr)) {
+          console.error(`Duplicate 'cidr' found: ${entry.cidr}`);
+          this.snackbar.emit('toast', { text: 'Subnet address range conflicts with existing or newly added subnets.', type: 'error' })
+          return true;
+        }
+        cidrSet.add(entry.cidr);
+      }
+
+      console.log('No duplicates found.');
+      return false;
+    }
   },
 
   computed: {

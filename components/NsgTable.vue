@@ -35,115 +35,96 @@
 
             <v-card-text>
               <v-container>
-                <!-- <v-row>
-                  <v-col
-                    cols="12"
-                    sm="6"
-                    md="4"
-                  > -->
-                    <v-text-field
-                      v-model="editedItem.name"
-                      label="Name"
-                      density="compact"
-                      variant="outlined"
-                    ></v-text-field>
-                  <!-- </v-col>
-                  <v-col
-                    cols="12"
-                    sm="6"
-                    md="4"
-                  > -->
-                    <v-text-field
-                      v-model="editedItem.properties.sourceAddressPrefixes"
-                      label="Source"
-                      density="compact"
-                      variant="outlined"
-                    ></v-text-field>
-                  <!-- </v-col>
-                  <v-col
-                    cols="12"
-                    sm="6"
-                    md="4"
-                  > -->
-                    <v-text-field
-                      v-model="editedItem.properties.destinationAddressPrefixes"
-                      label="Destination"
-                      density="compact"
-                      variant="outlined"
-                    ></v-text-field>
-                  <!-- </v-col>
-                  <v-col
-                    cols="12"
-                    sm="6"
-                    md="4"
-                  > -->
-                    <v-text-field
-                      v-model="editedItem.properties.destinationPortRanges"
-                      :rules="[numbersArrayOnly]"
-                      label="Port"
-                      density="compact"
-                      variant="outlined"
-                    ></v-text-field>
-                  <!-- </v-col>
-                  <v-col
-                    cols="12"
-                    sm="6"
-                    md="4"
-                  > -->
-                    <v-select
-                      v-model="editedItem.properties.protocol"
-                      :items="['Any', 'TCP', 'UDP', 'ICMP']"
-                      label="Protocol"
-                      density="compact"
-                      variant="outlined"
-                    ></v-select>
-                  <!-- </v-col>
-                  <v-col
-                    cols="12"
-                    sm="6"
-                    md="4"
-                  > -->
-                    <v-text-field
-                      v-model="editedItem.properties.priority"
-                      :rules="[numbersOnly]"
-                      label="position"
-                      density="compact"
-                      variant="outlined"
-                    ></v-text-field>
-                  <!-- </v-col>
-                  <v-col
-                    cols="12"
-                    sm="6"
-                    md="4"
-                  > -->
-                    <v-select
-                      v-model="editedItem.properties.access"
-                      :items="['Allow', 'Deny']"
-                      label="Action"
-                      density="compact"
-                      variant="outlined"
-                    ></v-select>
+                <v-form ref="form" v-model="form" @submit.prevent="onSubmit">
+                  <v-text-field
+                    v-model="editedItem.name"
+                    :disabled="editedIndex > -1"
+                    :rules="[required]"
+                    label="Name"
+                    density="compact"
+                    variant="outlined"
+                    class="mb-2"
+                  ></v-text-field>
+                 
+                  <v-text-field
+                    v-model="editedItem.properties.sourceAddressPrefixes"
+                    :rules="[required]"
+                    label="Source"
+                    density="compact"
+                    variant="outlined"
+                    class="mb-2"
+                  ></v-text-field>
+              
+                  <v-text-field
+                    v-model="editedItem.properties.destinationAddressPrefixes"
+                    :rules="[required]"
+                    label="Destination"
+                    density="compact"
+                    variant="outlined"
+                    class="mb-2"
+                  ></v-text-field>
+            
+                  <v-text-field
+                    v-model="editedItem.properties.destinationPortRanges"
+                    :rules="[required, numbersArrayOnly]"
+                    label="Port"
+                    density="compact"
+                    variant="outlined"
+                    class="mb-2"
+                  ></v-text-field>
+          
+                  <v-select
+                    v-model="editedItem.properties.protocol"
+                    :rules="[required]"
+                    :items="['Any', 'TCP', 'UDP', 'ICMP']"
+                    label="Protocol"
+                    density="compact"
+                    variant="outlined"
+                    class="mb-2"
+                  ></v-select>
 
-                    <v-select
-                      v-model="editedItem.properties.direction"
-                      :items="['Inbound', 'Outbound']"
-                      label="Direction"
-                      density="compact"
-                      variant="outlined"
-                    ></v-select>
+                  <v-text-field
+                    v-model="editedItem.properties.priority"
+                    :disabled="editedIndex > -1"
+                    :rules="[required, numbersOnly]"
+                    label="position"
+                    density="compact"
+                    variant="outlined"
+                    class="mb-2"
+                  ></v-text-field>
 
-                    <v-text-field
-                      v-model="editedItem.description"
-                      label="Description"
-                      density="compact"
-                      variant="outlined"
-                    ></v-text-field>
-                  <!-- </v-col>
-                </v-row> -->
+                  <v-select
+                    v-model="editedItem.properties.access"
+                    :rules="[required]"
+                    :items="['Allow', 'Deny']"
+                    label="Action"
+                    density="compact"
+                    variant="outlined"
+                    class="mb-2"
+                  ></v-select>
+
+                  <v-select
+                    v-model="editedItem.properties.direction"
+                    :rules="[required]"
+                    :items="['Inbound', 'Outbound']"
+                    label="Direction"
+                    density="compact"
+                    variant="outlined"
+                    class="mb-2"
+                  ></v-select>
+
+                  <v-text-field
+                    v-model="editedItem.description"
+                    :rules="[required]"
+                    label="Description"
+                    density="compact"
+                    variant="outlined"
+                  ></v-text-field>
+                </v-form>
               </v-container>
             </v-card-text>
 
-            <v-card-actions>
+            <v-card-actions class="mb-2">
               <v-spacer></v-spacer>
               <v-btn
                 color="blue-darken-1"
@@ -155,7 +136,7 @@
               <v-btn
                 color="blue-darken-1"
                 variant="text"
-                @click="save"
+                @click="onSubmit"
               >
                 Save
               </v-btn>
@@ -179,9 +160,9 @@
       <template v-if="showRows">
         <tr>
           <td>{{ item.name }}</td>
-          <td>{{ item.properties.sourceAddressPrefixes }}</td>
-          <td>{{ item.properties.destinationAddressPrefixes }}</td>
-          <td>{{ item.properties.destinationPortRanges }}</td>
+          <td>{{ getformattedData(item, 'sourceAddressPrefixes') }}</td>
+          <td>{{ getformattedData(item, 'destinationAddressPrefixes') }}</td>
+          <td>{{ getformattedData(item, 'destinationPortRanges') }}</td>
           <td>{{ item.properties.protocol }}</td>
           <td>{{ item.properties.priority }}</td>
           <td>{{ item.properties.access }}</td>
@@ -244,8 +225,10 @@
     props: ['tableData'],
     data: () => ({
       dialog: false,
+      snackbar: false,
       dialogDelete: false,
-      showRows: true,
+      showRows: false,
+      form: false,
       headers: [
         {
           title: 'Name',
@@ -253,11 +236,11 @@
           sortable: false,
           key: 'name',
         },
-        { title: 'Source', key: 'sourceAddressPrefixes' },
-        { title: 'Destination', key: 'destinationAddressPrefixes' },
-        { title: 'Port', key: 'destinationPortRanges' },
-        { title: 'Protocol', key: 'protocol' },
-        { title: 'Position', key: 'priority' },
+        { title: 'Source', key: 'sourceAddressPrefixes', sortable: false },
+        { title: 'Destination', key: 'destinationAddressPrefixes', sortable: false },
+        { title: 'Port', key: 'destinationPortRanges', sortable: false },
+        { title: 'Protocol', key: 'protocol', sortable: false },
+        { title: 'Position', key: 'priority', sortable: true },
         { title: 'Action', key: 'access', sortable: false },
         { title: 'Direction', key: 'direction', sortable: false },
         { title: 'Description', key: 'description', sortable: false },
@@ -275,9 +258,9 @@
         description: '',
         properties: {
           sourceAddressPrefixes: '',
-          destinationAddressPrefixes: 0,
-          destinationPortRanges: 0,
-          priority: 0,
+          destinationAddressPrefixes: null,
+          destinationPortRanges: null,
+          priority: null,
           access: 'Allow',
           direction: 'Inbound',
         }
@@ -286,15 +269,20 @@
         name: '',
         description: '',
         properties: {
-          sourceAddressPrefixes: 0,
-          destinationAddressPrefixes: 0,
-          destinationPortRanges: 0,
-          priority: 0,
+          sourceAddressPrefixes: null,
+          destinationAddressPrefixes: null,
+          destinationPortRanges: null,
+          priority: null,
           access: 'Allow',
           direction: 'Inbound',
         }
       },
     }),
+
+    mounted() {
+      const { $bus } = useNuxtApp()
+      this.snackbar = $bus
+    },
 
     computed: {
       formTitle () {
@@ -311,17 +299,20 @@
       },
     },
 
-    created () {
-
-    },
-
     methods: {
-      
+      required(v) {
+        return !!v || 'Field is required';
+      },
+
       numbersOnly(v) {
         return /^[0-9]+$/.test(v) || 'Field must be a number'
       },
 
       numbersArrayOnly(v) {
+        if (v === null || v === '' || v === '*' || v[0] === '*') {
+          return true; // Allow null or empty value
+        }
+
         const numbers = v.split(',').map(num => num.trim());
         return numbers.every(num => /^[0-9]+$/.test(num)) || 'Field must be a number or array of numbers';
       },
@@ -366,7 +357,69 @@
           this.tableData.push(this.editedItem)
         }
         this.close()
+        this.showRows = true
       },
+
+      onSubmit() {
+        // Validate form fields before submitting
+        this.$refs.form.validate().then(success => {
+        let res = this.hasDuplicates(this.tableData)
+          if (success.valid && !res) {
+            this.save();
+          } else {
+            console.log('Validation failed');
+          }
+        });
+      },
+
+      hasDuplicates(data) {
+        const nameSet = new Set();
+        const prioritySet = new Set();
+        const inboundPriorities = new Set();
+        const outboundPriorities = new Set();
+
+        nameSet.add(this.editedItem.name)
+        prioritySet.add(this.editedItem.properties.priority);
+
+        if (this.editedItem.properties.direction === 'Inbound') inboundPriorities.add(this.editedItem.properties.priority);
+        if (this.editedItem.properties.direction === 'Outbound') outboundPriorities.add(this.editedItem.properties.priority);
+
+        for (const entry of data) {
+          const direction = entry.properties.direction;
+          const priority = entry.properties.priority;
+
+          // Check for duplicate 'name'
+          if (nameSet.has(entry.name)) {
+            this.snackbar.emit('toast', { text: 'NSG name conflicts with existing or newly added NSGs.', type: 'error' })
+            return true;
+          }
+          nameSet.add(entry.name);
+
+          if (direction === 'Inbound') {
+            // Check for duplicate 'priority' in Inbound
+            if (inboundPriorities.has(priority)) {
+              this.snackbar.emit('toast', { text: 'NSG priority conflicts with existing or newly added NSGs.', type: 'error' })
+              return true;
+            }
+            inboundPriorities.add(priority)
+          } else if (direction === 'Outbound') {
+            // Check for duplicate 'priority' in Outbound
+            if (outboundPriorities.has(priority)) {
+              this.snackbar.emit('toast', { text: 'NSG priority conflicts with existing or newly added NSGs.', type: 'error' })
+              return true;
+            }
+            outboundPriorities.add(priority)
+          }
+        }
+
+        return false;
+      },
+
+      getformattedData(item, tag) {
+        if(tag === 'sourceAddressPrefixes') return item.properties.sourceAddressPrefixes + ''
+        if(tag === 'destinationAddressPrefixes') return item.properties.destinationAddressPrefixes + ''
+        if(tag === 'destinationPortRanges') return item.properties.destinationPortRanges + ''
+      }
     },
   }
 </script>
